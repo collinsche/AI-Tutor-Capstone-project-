@@ -169,7 +169,7 @@ class ContentGenerator:
                 return None
                 
             # Check if API key is configured
-            if not self.ai_assistant.config.api_key and not self.ai_assistant.config.use_demo_mode:
+            if not self.ai_assistant.api_key and not self.ai_assistant.config.use_demo_mode:
                 st.error("AI API key not configured")
                 return None
             
