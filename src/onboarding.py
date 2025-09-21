@@ -202,6 +202,40 @@ class OnboardingSystem:
         except Exception as e:
             st.warning(f"Could not save profile to file: {e}")
 
+    def is_onboarding_complete(self) -> bool:
+        """Check if onboarding is complete"""
+        # Check if user profile exists in session state
+        if hasattr(st.session_state, 'user_profile') and st.session_state.user_profile:
+            return True
+        
+        # Check if profile file exists
+        try:
+            with open("user_profile.json", "r") as f:
+                profile = json.load(f)
+                if profile and 'preferences' in profile:
+                    st.session_state.user_profile = profile
+                    return True
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
+        
+        return False
+
+    def reset_onboarding(self):
+        """Reset the onboarding process"""
+        # Clear session state
+        if hasattr(st.session_state, 'user_profile'):
+            del st.session_state.user_profile
+        if hasattr(st.session_state, 'onboarding_responses'):
+            del st.session_state.onboarding_responses
+        
+        # Remove profile file
+        try:
+            import os
+            if os.path.exists("user_profile.json"):
+                os.remove("user_profile.json")
+        except Exception:
+            pass
+
 
 def run_onboarding_chat():
     """Run the onboarding chat interface"""
