@@ -9,6 +9,7 @@ import os
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 
+
 class UserProfile:
     """User profile management class"""
     
@@ -17,15 +18,15 @@ class UserProfile:
         self.profile_file = profile_file
         self.name = ""
         self.learning_style = "Visual"  # Default learning style
-        self.subjects = []
-        self.preferences = {}
-        self.learning_history = []
+        self.subjects: List[str] = []
+        self.preferences: Dict[str, Any] = {}
+        self.learning_history: List[Dict[str, Any]] = []
         self.created_at = datetime.now().isoformat()
         self.last_updated = datetime.now().isoformat()
         
         # Load existing profile if available
         self.load_profile()
-    
+
     def update_profile(self, name: str, learning_style: str, subjects: List[str], 
                       preferences: Optional[Dict] = None):
         """Update user profile information"""
@@ -38,7 +39,7 @@ class UserProfile:
         
         # Save updated profile
         self.save_profile()
-    
+
     def add_learning_session(self, session_data: Dict[str, Any]):
         """Add a learning session to history"""
         session = {
@@ -53,50 +54,55 @@ class UserProfile:
         self.learning_history.append(session)
         self.last_updated = datetime.now().isoformat()
         self.save_profile()
-    
+
     def get_learning_preferences(self) -> Dict[str, Any]:
-        """Get learning preferences based on profile and history"""
-        preferences = {
+        """Get personalized learning preferences"""
+        return {
             "learning_style": self.learning_style,
             "preferred_subjects": self.subjects,
-            "difficulty_preference": self._analyze_difficulty_preference(),
-            "session_length_preference": self._analyze_session_length(),
-            "best_learning_times": self._analyze_learning_patterns(),
-            "content_format": self._get_content_format_preference()
+            "difficulty_preference": self.preferences.get("difficulty", "adaptive"),
+            "session_length": self._analyze_session_length(),
+            "best_time": self._analyze_best_learning_time(),
+            "content_format": self.preferences.get("content_format", "mixed")
         }
-        
-        return preferences
-    
-    def _analyze_difficulty_preference(self) -> str:
-        """Analyze preferred difficulty level from history"""
+
+    def _analyze_best_learning_time(self) -> str:
+        """Analyze best learning time based on session history"""
         if not self.learning_history:
-            return "medium"
+            return "morning"  # Default recommendation
         
-        difficulty_counts = {"easy": 0, "medium": 0, "hard": 0}
-        satisfaction_by_difficulty = {"easy": [], "medium": [], "hard": []}
+        # Simple analysis based on satisfaction scores by time of day
+        time_satisfaction: Dict[str, List[float]] = {"morning": [], "afternoon": [], "evening": []}
         
         for session in self.learning_history:
-            difficulty = session.get("difficulty_level", "medium")
-            satisfaction = session.get("satisfaction_score")
-            
-            if difficulty in difficulty_counts:
-                difficulty_counts[difficulty] += 1
+            try:
+                session_time = datetime.fromisoformat(session["timestamp"])
+                hour = session_time.hour
+                satisfaction = session.get("satisfaction_score")
+                
                 if satisfaction is not None:
-                    satisfaction_by_difficulty[difficulty].append(satisfaction)
+                    if 6 <= hour < 12:
+                        time_satisfaction["morning"].append(satisfaction)
+                    elif 12 <= hour < 18:
+                        time_satisfaction["afternoon"].append(satisfaction)
+                    else:
+                        time_satisfaction["evening"].append(satisfaction)
+            except (ValueError, KeyError):
+                continue
         
-        # Find difficulty with highest average satisfaction
-        best_difficulty = "medium"
-        best_avg_satisfaction = 0
+        # Find time with highest average satisfaction
+        best_time = "morning"
+        best_score = 0
         
-        for difficulty, scores in satisfaction_by_difficulty.items():
+        for time_period, scores in time_satisfaction.items():
             if scores:
-                avg_satisfaction = sum(scores) / len(scores)
-                if avg_satisfaction > best_avg_satisfaction:
-                    best_avg_satisfaction = avg_satisfaction
-                    best_difficulty = difficulty
+                avg_score = sum(scores) / len(scores)
+                if avg_score > best_score:
+                    best_score = avg_score
+                    best_time = time_period
         
-        return best_difficulty
-    
+        return best_time
+
     def _analyze_session_length(self) -> int:
         """Analyze preferred session length in minutes"""
         if not self.learning_history:
@@ -106,62 +112,82 @@ class UserProfile:
         avg_duration = sum(durations) / len(durations)
         
         return int(avg_duration)
-    
-    def _analyze_learning_patterns(self) -> List[str]:
-        """Analyze learning time patterns"""
+
+    def get_subject_interests(self) -> List[str]:
+        """Get list of subject interests"""
+        return self.subjects.copy()
+
+    def add_subject_interest(self, subject: str):
+        """Add a new subject interest"""
+        if subject not in self.subjects:
+            self.subjects.append(subject)
+            self.last_updated = datetime.now().isoformat()
+            self.save_profile()
+
+    def remove_subject_interest(self, subject: str):
+        """Remove a subject interest"""
+        if subject in self.subjects:
+            self.subjects.remove(subject)
+            self.last_updated = datetime.now().isoformat()
+            self.save_profile()
+
+    def get_learning_stats(self) -> Dict[str, Any]:
+        """Get learning statistics"""
         if not self.learning_history:
-            return ["morning", "afternoon"]
-        
-        # Simple pattern analysis based on timestamps
-        time_patterns = {"morning": 0, "afternoon": 0, "evening": 0}
-        
-        for session in self.learning_history:
-            timestamp = session.get("timestamp", "")
-            if timestamp:
-                try:
-                    dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-                    hour = dt.hour
-                    
-                    if 6 <= hour < 12:
-                        time_patterns["morning"] += 1
-                    elif 12 <= hour < 18:
-                        time_patterns["afternoon"] += 1
-                    else:
-                        time_patterns["evening"] += 1
-                except:
-                    continue
-        
-        # Return top 2 preferred times
-        sorted_times = sorted(time_patterns.items(), key=lambda x: x[1], reverse=True)
-        return [time for time, count in sorted_times[:2] if count > 0]
-    
-    def _get_content_format_preference(self) -> Dict[str, str]:
-        """Get content format preferences based on learning style"""
-        format_preferences = {
-            "Visual": {
-                "primary": "diagrams_and_charts",
-                "secondary": "videos",
-                "avoid": "long_text_blocks"
-            },
-            "Auditory": {
-                "primary": "audio_explanations",
-                "secondary": "discussions",
-                "avoid": "silent_reading"
-            },
-            "Kinesthetic": {
-                "primary": "interactive_exercises",
-                "secondary": "simulations",
-                "avoid": "passive_content"
-            },
-            "Reading/Writing": {
-                "primary": "detailed_text",
-                "secondary": "written_exercises",
-                "avoid": "audio_only_content"
+            return {
+                "total_sessions": 0,
+                "total_time": 0,
+                "average_session": 0,
+                "favorite_subjects": [],
+                "learning_streak": 0
             }
-        }
         
-        return format_preferences.get(self.learning_style, format_preferences["Visual"])
-    
+        total_sessions = len(self.learning_history)
+        total_time = sum(session.get("duration", 0) for session in self.learning_history)
+        avg_session = total_time / total_sessions if total_sessions > 0 else 0
+        
+        # Analyze favorite subjects
+        subject_counts: Dict[str, int] = {}
+        for session in self.learning_history:
+            topics = session.get("topics_covered", [])
+            for topic in topics:
+                subject_counts[topic] = subject_counts.get(topic, 0) + 1
+        
+        favorite_subjects = sorted(subject_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+        
+        return {
+            "total_sessions": total_sessions,
+            "total_time": total_time,
+            "average_session": round(avg_session, 1),
+            "favorite_subjects": [subject for subject, _ in favorite_subjects],
+            "learning_streak": self._calculate_streak()
+        }
+
+    def _calculate_streak(self) -> int:
+        """Calculate current learning streak"""
+        if not self.learning_history:
+            return 0
+        
+        # Sort sessions by date
+        sorted_sessions = sorted(self.learning_history, key=lambda x: x.get("timestamp", ""), reverse=True)
+        
+        streak = 0
+        current_date = datetime.now().date()
+        
+        for session in sorted_sessions:
+            try:
+                session_date = datetime.fromisoformat(session["timestamp"]).date()
+                
+                if session_date == current_date or (current_date - session_date).days == streak + 1:
+                    streak += 1
+                    current_date = session_date
+                else:
+                    break
+            except (ValueError, KeyError):
+                continue
+        
+        return streak
+
     def get_progress_summary(self) -> Dict[str, Any]:
         """Get learning progress summary"""
         if not self.learning_history:
@@ -207,7 +233,7 @@ class UserProfile:
             "topics_covered": unique_topics,
             "progress_trend": trend
         }
-    
+
     def save_profile(self):
         """Save profile to file"""
         try:
@@ -226,7 +252,7 @@ class UserProfile:
                 
         except Exception as e:
             print(f"Error saving profile: {e}")
-    
+
     def load_profile(self):
         """Load profile from file"""
         try:
@@ -244,7 +270,7 @@ class UserProfile:
                 
         except Exception as e:
             print(f"Error loading profile: {e}")
-    
+
     def reset_profile(self):
         """Reset profile to defaults"""
         self.name = ""
@@ -258,9 +284,13 @@ class UserProfile:
         # Remove profile file
         if os.path.exists(self.profile_file):
             os.remove(self.profile_file)
+
+    def get(self, key: str, default=None):
+        """Get attribute value with default fallback (dict-like interface)"""
+        return getattr(self, key, default)
     
-    def export_profile(self) -> Dict[str, Any]:
-        """Export profile data"""
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert profile to dictionary format"""
         return {
             "name": self.name,
             "learning_style": self.learning_style,
@@ -269,5 +299,16 @@ class UserProfile:
             "learning_history": self.learning_history,
             "created_at": self.created_at,
             "last_updated": self.last_updated,
-            "progress_summary": self.get_progress_summary()
+            "user_id": getattr(self, 'user_id', self.name),  # Add user_id support
+            "knowledge_level": getattr(self, 'knowledge_level', {}),  # Add knowledge_level support
+            "available_time": getattr(self, 'available_time', 60),  # Add available_time support
+            "goals": getattr(self, 'goals', []),  # Add goals support
+            "experience_level": getattr(self, 'experience_level', 'Beginner'),  # Add experience_level support
+            "email": getattr(self, 'email', '')  # Add email support
         }
+    
+    def export_profile(self) -> Dict[str, Any]:
+        """Export profile data"""
+        profile_dict = self.to_dict()
+        profile_dict["progress_summary"] = self.get_progress_summary()
+        return profile_dict

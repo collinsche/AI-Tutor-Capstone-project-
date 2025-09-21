@@ -1,0 +1,44 @@
+{
+  "summary": {
+    "total_tests": 24,
+    "passed_tests": 24,
+    "success_rate": 100.0,
+    "all_passed": true
+  },
+  "detailed_results": {
+    "Module Imports": {
+      "config": "\u2705 SUCCESS",
+      "user_profile": "\u2705 SUCCESS",
+      "educational_assistant": "\u2705 SUCCESS",
+      "learning_analytics": "\u2705 SUCCESS",
+      "onboarding": "\u2705 SUCCESS",
+      "learning_paths": "\u2705 SUCCESS",
+      "enhanced_chat": "\u2705 SUCCESS",
+      "adaptive_quiz": "\u2705 SUCCESS",
+      "content_generator": "\u2705 SUCCESS",
+      "dashboard": "\u2705 SUCCESS",
+      "app_router": "\u2705 SUCCESS",
+      "main": "\u2705 SUCCESS"
+    },
+    "Core Components": {
+      "UserProfile": "\u2705 SUCCESS",
+      "EducationalAssistant": "\u2705 SUCCESS",
+      "LearningAnalytics": "\u2705 SUCCESS"
+    },
+    "Advanced Components": {
+      "OnboardingInterface": "\u2705 SUCCESS",
+      "LearningPathGenerator": "\u2705 SUCCESS",
+      "EnhancedChatInterface": "\u2705 SUCCESS",
+      "AdaptiveQuizInterface": "\u2705 SUCCESS",
+      "ContentGenerator": "\u2705 SUCCESS",
+      "DashboardManager": "\u2705 SUCCESS"
+    },
+    "App Router": {
+      "AppRouter": "\u2705 SUCCESS"
+    },
+    "Functionality Tests": {
+      "UserProfile_functionality": "\u2705 SUCCESS",
+      "LearningAnalytics_functionality": "\u2705 SUCCESS"
+    }
+  }
+}

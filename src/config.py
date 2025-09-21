@@ -11,12 +11,13 @@ from dataclasses import dataclass
 @dataclass
 class AIConfig:
     """AI model configuration"""
-    model_name: str = "gpt-3.5-turbo"
+    model_name: str = "x-ai/grok-4"
     max_tokens: int = 1000
     temperature: float = 0.7
     api_key: str = ""
-    api_base: str = "https://api.openai.com/v1"
+    api_base_url: str = "https://openrouter.ai/api/v1"
     timeout: int = 30
+    use_demo_mode: bool = True
 
 @dataclass
 class AppConfig:
@@ -73,9 +74,12 @@ class ConfigManager:
     def _load_from_env(self):
         """Load configuration from environment variables"""
         # AI Configuration
-        self.ai_config.api_key = os.getenv("OPENAI_API_KEY", "")
+        self.ai_config.api_key = os.getenv("GROK_API_KEY", "")
         self.ai_config.model_name = os.getenv("AI_MODEL", self.ai_config.model_name)
         self.ai_config.temperature = float(os.getenv("AI_TEMPERATURE", self.ai_config.temperature))
+        self.ai_config.api_base_url = os.getenv('AI_BASE_URL', self.ai_config.api_base_url)
+        self.ai_config.max_tokens = int(os.getenv("AI_MAX_TOKENS", self.ai_config.max_tokens))
+        self.ai_config.use_demo_mode = os.getenv("USE_DEMO_MODE", "false").lower() == "true"
         
         # App Configuration
         self.app_config.debug = os.getenv("DEBUG", "false").lower() == "true"
@@ -138,7 +142,7 @@ class ConfigManager:
         
         # Validate AI config
         if not self.ai_config.api_key:
-            issues["warnings"].append("OpenAI API key not set - using demo mode")
+            issues["warnings"].append("Grok API key not set - using demo mode")
         
         if self.ai_config.temperature < 0 or self.ai_config.temperature > 2:
             issues["errors"].append("AI temperature must be between 0 and 2")

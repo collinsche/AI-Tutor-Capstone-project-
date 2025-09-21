@@ -1,28 +1,26 @@
 #!/usr/bin/env python3
 """
 Educational Assistant Core Module
-Handles AI interactions and personalized learning
+Handles AI interactions and personalized learning using Grok
 """
 
-import openai
+import logging
+import requests
+from config import get_ai_config, get_app_config
 import json
 import random
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 class EducationalAssistant:
-    """Core AI Educational Assistant class"""
-    
-    def __init__(self, api_key: Optional[str] = None):
-        """Initialize the educational assistant"""
-        self.api_key = api_key or "your-openai-api-key-here"
-        # Note: In production, use environment variables for API keys
-        # openai.api_key = self.api_key
-        
+    def __init__(self):
+        self.config = get_ai_config()
+        self.app_config = get_app_config()
+        logging.basicConfig(level=self.app_config.log_level)
+        self.api_key = self.config.api_key
+        self.base_url = self.config.api_base_url or "https://openrouter.ai/api/v1"
         self.conversation_history = []
         self.learning_context = {}
-        
-        # Predefined learning strategies for different styles
         self.learning_strategies = {
             "Visual": {
                 "techniques": ["diagrams", "charts", "mind maps", "infographics"],
@@ -45,33 +43,140 @@ class EducationalAssistant:
                 "examples": "written"
             }
         }
-    
+
     def generate_response(self, user_input: str, user_profile) -> str:
-        """Generate personalized AI response based on user profile"""
-        try:
-            # Build context-aware prompt
-            system_prompt = self._build_system_prompt(user_profile)
-            
-            # For demo purposes, we'll use a rule-based approach
-            # In production, this would use OpenAI's API
+        system_prompt = self._build_system_prompt(user_profile)
+        if self.config.use_demo_mode:
             response = self._generate_demo_response(user_input, user_profile)
-            
-            # Update conversation history
-            self.conversation_history.append({
-                "user": user_input,
-                "assistant": response,
-                "timestamp": datetime.now().isoformat()
-            })
-            
-            return response
-            
-        except Exception as e:
-            return f"I apologize, but I encountered an error: {str(e)}. Please try again."
-    
+        else:
+            try:
+                logging.info(f"Generating response using Grok 4 Fast model: {self.config.model_name}")
+                
+                # Validate API key
+                if not self.api_key or not self.api_key.startswith(('sk-', 'xai-', 'sk-or-')):
+                    logging.warning("Invalid or missing Grok API key, falling back to demo mode")
+                    response = self._generate_demo_response(user_input, user_profile)
+                    response += "\n\n⚠️ Note: Please configure a valid Grok API key to use AI features."
+                    return response
+                
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                ] + [
+                    item
+                    for h in self.conversation_history
+                    for item in (
+                        {"role": "user", "content": h["user"]},
+                        {"role": "assistant", "content": h["assistant"]}
+                    )
+                ] + [
+                    {"role": "user", "content": user_input}
+                ]
+                
+                headers = {
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                    "User-Agent": "AI-Educational-Assistant/1.0"
+                }
+                
+                payload = {
+                    "model": self.config.model_name,
+                    "messages": messages,
+                    "temperature": self.config.temperature,
+                    "max_tokens": self.config.max_tokens,
+                    "top_p": getattr(self.config, 'top_p', 1.0),
+                    "frequency_penalty": getattr(self.config, 'frequency_penalty', 0.0),
+                    "presence_penalty": getattr(self.config, 'presence_penalty', 0.0),
+                    "stream": False
+                }
+                
+                logging.debug(f"Making request to Grok API: {self.base_url}/chat/completions")
+                response_obj = requests.post(
+                    f"{self.base_url}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=self.config.timeout
+                )
+                
+                # Enhanced error handling for different HTTP status codes
+                if response_obj.status_code == 401:
+                    logging.error("Grok API authentication failed - invalid API key")
+                    response = self._generate_demo_response(user_input, user_profile)
+                    response += "\n\n🔑 Authentication Error: Invalid Grok API key. Please check your API key configuration."
+                elif response_obj.status_code == 403:
+                    logging.error("Grok API access forbidden - insufficient permissions")
+                    response = self._generate_demo_response(user_input, user_profile)
+                    response += "\n\n🚫 Access Denied: Your Grok API key doesn't have sufficient permissions."
+                elif response_obj.status_code == 429:
+                    logging.error("Grok API rate limit exceeded")
+                    response = self._generate_demo_response(user_input, user_profile)
+                    response += "\n\n⏱️ Rate Limit: Too many requests to Grok API. Please try again later."
+                elif response_obj.status_code == 500:
+                    logging.error("Grok API server error")
+                    response = self._generate_demo_response(user_input, user_profile)
+                    response += "\n\n🔧 Server Error: Grok API is experiencing issues. Using demo mode."
+                elif response_obj.status_code != 200:
+                    logging.error(f"Grok API returned status code {response_obj.status_code}: {response_obj.text}")
+                    response = self._generate_demo_response(user_input, user_profile)
+                    response += f"\n\n❌ API Error ({response_obj.status_code}): Using demo mode."
+                else:
+                    response_data = response_obj.json()
+                    
+                    # Validate response structure
+                    if "choices" not in response_data or not response_data["choices"]:
+                        logging.error("Invalid response structure from Grok API")
+                        response = self._generate_demo_response(user_input, user_profile)
+                        response += "\n\n⚠️ Invalid API response structure. Using demo mode."
+                    else:
+                        response = response_data["choices"][0]["message"]["content"]
+                        logging.info(f"Successfully generated response using Grok 4 Fast model")
+                        
+                        # Log usage information if available
+                        if "usage" in response_data:
+                            usage = response_data["usage"]
+                            logging.info(f"Token usage - Prompt: {usage.get('prompt_tokens', 0)}, "
+                                       f"Completion: {usage.get('completion_tokens', 0)}, "
+                                       f"Total: {usage.get('total_tokens', 0)}")
+                
+            except requests.exceptions.Timeout:
+                logging.error(f"Grok API request timeout after {self.config.timeout} seconds")
+                response = self._generate_demo_response(user_input, user_profile)
+                response += "\n\n⏰ Timeout: Grok API request took too long. Using demo mode."
+            except requests.exceptions.ConnectionError:
+                logging.error("Failed to connect to Grok API")
+                response = self._generate_demo_response(user_input, user_profile)
+                response += "\n\n🌐 Connection Error: Unable to reach Grok API. Check your internet connection."
+            except requests.exceptions.RequestException as e:
+                logging.error(f"Grok API request error: {str(e)}")
+                response = self._generate_demo_response(user_input, user_profile)
+                response += "\n\n🔗 Network Error: Problem communicating with Grok API. Using demo mode."
+            except json.JSONDecodeError:
+                logging.error("Failed to parse Grok API response as JSON")
+                response = self._generate_demo_response(user_input, user_profile)
+                response += "\n\n📄 Parse Error: Invalid response from Grok API. Using demo mode."
+            except KeyError as e:
+                logging.error(f"Missing expected field in Grok API response: {str(e)}")
+                response = self._generate_demo_response(user_input, user_profile)
+                response += "\n\n🔍 Response Error: Unexpected API response format. Using demo mode."
+            except Exception as e:
+                logging.error(f"Unexpected error generating response: {str(e)}", exc_info=True)
+                response = self._generate_demo_response(user_input, user_profile)
+                response += "\n\n❓ Unexpected Error: An unknown error occurred. Using demo mode."
+        
+        # Store conversation history
+        self.conversation_history.append({
+            "user": user_input,
+            "assistant": response,
+            "timestamp": datetime.now().isoformat(),
+            "model": self.config.model_name,
+            "mode": "demo" if self.config.use_demo_mode else "api"
+        })
+        
+        return response
+
     def _build_system_prompt(self, user_profile) -> str:
         """Build system prompt based on user profile"""
-        learning_style = user_profile.learning_style or "Visual"
-        subjects = ", ".join(user_profile.subjects) if user_profile.subjects else "general topics"
+        learning_style = user_profile.get('learning_style', 'Visual')
+        subjects = ", ".join(user_profile.get('subjects', [])) if user_profile.get('subjects') else "general topics"
         
         strategies = self.learning_strategies.get(learning_style, self.learning_strategies["Visual"])
         
@@ -79,7 +184,7 @@ class EducationalAssistant:
         You are an AI educational assistant specialized in personalized learning.
         
         Student Profile:
-        - Name: {user_profile.name or 'Student'}
+        - Name: {user_profile.get('name', 'Student')}
         - Learning Style: {learning_style}
         - Subjects: {subjects}
         
@@ -100,9 +205,9 @@ class EducationalAssistant:
         return prompt
     
     def _generate_demo_response(self, user_input: str, user_profile) -> str:
-        """Generate demo response (replace with OpenAI API in production)"""
-        learning_style = user_profile.learning_style or "Visual"
-        name = user_profile.name or "there"
+        """Generate demo response (replace with Grok API in production)"""
+        learning_style = user_profile.get('learning_style', 'Visual')
+        name = user_profile.get('name', 'there')
         
         # Simple keyword-based responses for demo
         user_input_lower = user_input.lower()
@@ -161,22 +266,37 @@ class EducationalAssistant:
     
     def get_recommendations(self, user_profile) -> Dict[str, List[str]]:
         """Get personalized learning recommendations"""
-        learning_style = user_profile.learning_style or "Visual"
-        subjects = user_profile.subjects or ["General Studies"]
+        learning_style = user_profile.get('learning_style', 'Visual')
+        subjects = user_profile.get('subjects', ['General Studies'])
         
-        strategies = self.learning_strategies[learning_style]
+        # Map full learning style descriptions to simple keys
+        style_mapping = {
+            "Visual (diagrams, charts, images)": "Visual",
+            "Auditory (listening, discussions)": "Auditory", 
+            "Kinesthetic (hands-on, practice)": "Kinesthetic",
+            "Reading/Writing (text-based)": "Reading/Writing"
+        }
+        
+        # Get the mapped style or use the original if it's already mapped
+        mapped_style = style_mapping.get(learning_style, learning_style)
+        
+        # Fallback to Visual if the style is not found
+        if mapped_style not in self.learning_strategies:
+            mapped_style = "Visual"
+            
+        strategies = self.learning_strategies[mapped_style]
         
         materials = []
         goals = []
         
         for subject in subjects[:3]:  # Limit to 3 subjects
-            if learning_style == "Visual":
+            if mapped_style == "Visual":
                 materials.append(f"Interactive {subject} diagrams and infographics")
                 materials.append(f"Video tutorials for {subject} concepts")
-            elif learning_style == "Auditory":
+            elif mapped_style == "Auditory":
                 materials.append(f"{subject} podcasts and audio lectures")
                 materials.append(f"Discussion groups for {subject}")
-            elif learning_style == "Kinesthetic":
+            elif mapped_style == "Kinesthetic":
                 materials.append(f"Hands-on {subject} experiments and simulations")
                 materials.append(f"Interactive {subject} practice problems")
             else:  # Reading/Writing

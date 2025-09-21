@@ -49,14 +49,14 @@ Develop an intelligent educational assistant that leverages **Generative AI** to
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   User Interface │    │  AI Engine      │    │  Analytics      │
-│   (Streamlit)    │◄──►│  (OpenAI GPT)   │◄──►│  (Learning Data)│
+│   (Streamlit)    │◄──►│  (Grok AI)      │◄──►│  (Learning Data)│
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 ## Development Approach
 1. **User-Centered Design** - Focus on learner experience
 2. **Agile Development** - Iterative implementation
-3. **AI Integration** - Seamless GPT model integration
+3. **AI Integration** - Seamless Grok model integration
 4. **Data-Driven Insights** - Comprehensive analytics
 
 ---
@@ -72,7 +72,7 @@ Develop an intelligent educational assistant that leverages **Generative AI** to
 
 ## Technology Stack
 - **Frontend:** Streamlit
-- **AI Engine:** OpenAI GPT-4
+- **AI Engine:** Grok AI
 - **Backend:** Python
 - **Analytics:** Plotly, Matplotlib
 - **Data:** JSON-based storage
@@ -333,7 +333,7 @@ src/
 ## Technical Specifications
 - **Python 3.8+** - Core development language
 - **Streamlit** - Web framework
-- **OpenAI API** - AI engine
+- **Grok API** - AI engine
 - **Modern Libraries** - Analytics and visualization
 
 ---

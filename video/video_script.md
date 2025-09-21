@@ -31,7 +31,7 @@
 **Narrator:** "Let me show you the system in action. Here's our clean, intuitive interface built with Streamlit. The dashboard provides immediate access to personalized learning sessions, progress tracking, and analytics."
 
 ### Visual: Navigate through main menu options
-**Narrator:** "The system consists of four main components: the AI-powered learning engine using OpenAI's GPT-4, comprehensive user profile management, real-time learning analytics, and an adaptive content delivery system."
+**Narrator:** "The system consists of four main components: the AI-powered learning engine using Grok AI, comprehensive user profile management, real-time learning analytics, and an adaptive content delivery system."
 
 ---
 

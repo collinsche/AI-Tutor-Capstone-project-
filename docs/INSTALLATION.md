@@ -12,7 +12,7 @@ Before installing the AI Educational Assistant, ensure you have the following pr
 - **Internet Connection**: Required for AI model access
 
 ### Required Accounts
-- **OpenAI API Key**: For AI response generation (optional for demo mode)
+- **Grok API Key**: For AI response generation (optional for demo mode)
 - **Git**: For version control and repository management
 
 ## Installation Methods
@@ -103,8 +103,8 @@ Create a `.env` file in the project root with the following variables:
 
 ```env
 # AI Configuration
-OPENAI_API_KEY=your_openai_api_key_here
-AI_MODEL=gpt-3.5-turbo
+GROK_API_KEY=your_grok_api_key_here
+AI_MODEL=x-ai/grok-4-fast
 AI_TEMPERATURE=0.7
 AI_MAX_TOKENS=1000
 
@@ -205,13 +205,13 @@ lsof -i :8501  # On macOS/Linux
 netstat -ano | findstr :8501  # On Windows
 ```
 
-#### Issue 4: OpenAI API Issues
+#### Issue 4: Grok API Issues
 ```bash
 # Test API key
-python -c "import openai; openai.api_key='your_key'; print('API key valid')"
+python -c "import requests; headers={'Authorization': 'Bearer your_key'}; print('API key format valid')"
 
-# Check API quota
-curl -H "Authorization: Bearer your_api_key" https://api.openai.com/v1/usage
+# Check API connection
+curl -H "Authorization: Bearer your_api_key" https://api.x.ai/v1/models
 ```
 
 #### Issue 5: Permission Errors
@@ -272,7 +272,7 @@ CACHE_MAX_ENTRIES = 1000
 echo ".env" >> .gitignore
 
 # Use environment variables in production
-export OPENAI_API_KEY="your_key_here"
+export GROK_API_KEY="your_key_here"
 ```
 
 ### File Permissions
@@ -298,7 +298,7 @@ echo "web: streamlit run src/main.py --server.port $PORT" > Procfile
 
 # Deploy to Heroku
 heroku create your-app-name
-heroku config:set OPENAI_API_KEY=your_key
+heroku config:set GROK_API_KEY=your_key
 git push heroku main
 ```
 
