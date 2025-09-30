@@ -1,0 +1,307 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+/* === MASTER STYLESHEET - FINAL V2 === */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #1a1f3a !important;
+}
+body::before {
+    content: ' ';
+    display: none;
+    width: 0;
+    height: 0;
+    background: linear-gradient(135deg, #00d4ff 0%, #ff006b 100%) !important;
+}
+
+:root {
+    --mint: #00F5D4;
+    --pink: #F15BB5;
+    --purple: #9B5DE5;
+    --bg-dark: #0f1220;
+    --bg-light: #1a1f3a;
+    --text-light: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.7);
+    --border-color: rgba(255, 255, 255, 0.2);
+}
+
+.stApp {
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+    color: var(--text-light);
+    opacity: 1 !important;
+}
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-light) !important;
+}
+.stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+    color: var(--text-light) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+[data-testid="stMarkdownContainer"] h1, [data-testid="stMarkdownContainer"] h2 {
+    color: #ffffff !important;
+}
+/* Enhanced sidebar visibility */
+
+[data-testid="stSidebar"] h1 ,
+
+[data-testid="stSidebar"] label ,
+
+[data-testid="stSidebar"] div ,
+
+[data-testid="stSidebar"] .stRadio > div > label ,
+
+[data-testid="stSidebar"] .stRadio > div > label > span  {
+
+    color: var(--text-light) !important; /* #ffffff */
+
+    opacity: 1 !important ;
+
+    visibility: visible !important ;
+
+    font-size: 1rem !important ;
+
+    font-weight: 500 ;
+
+}
+
+
+
+/* Ensure sidebar background contrasts with text */
+
+[data-testid="stSidebar"]  {
+
+    background-color: var(--bg-dark) !important; /* #0f1220 */
+
+    color: var(--text-light) !important ;
+
+}
+
+
+
+/* Fallback for any nested invisible text */
+
+[data-testid="stSidebar"]  * {
+
+    color: var(--text-light) !important ;
+
+    opacity: 1 !important ;
+
+}
+
+/* Enhanced visibility for all Streamlit component labels */
+.stTextInput label,
+.stRadio label,
+.stSelectbox label,
+.stMultiSelect label,
+.stSlider label,
+.stSelectSlider label,
+.stMetricLabel {
+    color: var(--text-light) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    font-size: 1rem !important;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+/* Ensure radio and multiselect option text is visible */
+.stRadio > div > label,
+.stRadio > div > label > div,
+.stMultiSelect > div > ul > li {
+    color: var(--text-light) !important;
+    opacity: 1 !important;
+}
+
+/* Sidebar navigation text */
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] div {
+    color: var(--text-light) !important;
+    opacity: 1 !important;
+}
+
+/* Button text visibility - light text for better contrast on gradient */
+.stButton > button {
+    background: linear-gradient(135deg, var(--mint), var(--pink));
+    color: var(--text-light) !important; /* Changed from var(--bg-dark) */
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 600;
+    opacity: 1 !important;
+}
+
+/* Input and container styles */
+.stTextInput > div > div > input,
+.stSelectbox > div > div > div,
+.stMultiSelect > div > div > div,
+.stRadio > div {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    color: var(--text-light) !important;
+}
+.stTextInput > div > div > input::placeholder {
+    color: var(--text-muted) !important;
+}
+.stRadio > div {
+    padding: 10px;
+}
+
+/* Stepper styles */
+.stepper-container {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+}
+.step-item {
+    display: flex;
+    align-items: center;
+    opacity: 0.6;
+}
+.step-item.current, .step-item.completed {
+    opacity: 1;
+}
+.progress-ring-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.progress-ring {
+    width: 40px;
+    height: 40px;
+    transform: rotate(-90deg);
+}
+.progress-ring-circle {
+    fill: none;
+    stroke-width: 3;
+    r: 18;
+    cx: 20;
+    cy: 20;
+}
+.progress-ring-background {
+    stroke: rgba(255, 255, 255, 0.1);
+}
+.progress-ring-progress {
+    stroke-linecap: round;
+    stroke-dasharray: 113.097;
+    stroke-dashoffset: 113.097;
+    transition: stroke-dashoffset 0.6s ease;
+}
+.progress-ring-progress.active {
+    stroke-dashoffset: 0;
+}
+.progress-ring-number {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
+    font-weight: 600;
+}
+.step-label {
+    margin-left: 10px;
+    color: var(--text-muted);
+}
+.step-item.current .step-label, .step-item.completed .step-label {
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+/* Dashboard hero */
+.dashboard-hero {
+    padding: 24px;
+    border-radius: 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+.dashboard-hero h1 {
+    font-size: 1.8rem;
+}
+.hero-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+/* Progress bar styles */
+.progress-rail {
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 999px;
+    margin-top: 10px;
+}
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--mint), var(--pink));
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+/* Quick grid and cards */
+.quick-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 20px 0;
+}
+.quick-card {
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease;
+}
+.quick-card:hover {
+    transform: translateY(-4px);
+}
+.quick-title {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: var(--text-light);
+}
+.quick-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+.activity-item {
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    color: var(--text-light);
+}
+
+/* Icon styles for metrics */
+.icon-metric {
+    font-size: 1.5rem;
+    color: var(--mint);
+    margin-bottom: 5px;
+}
+
+/* Avatar in hero and activity */
+.avatar-hero {
+    border-radius: 50%;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+.avatar-activity {
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+/* Hover for quick cards and activity */
+.quick-card:hover, .activity-item:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
